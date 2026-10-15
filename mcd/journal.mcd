@@ -1,0 +1,94 @@
+% MCD du projet journal IA (Mocodo 4.3)
+% Les lignes qui commencent par % sont des commentaires : Mocodo les ignore.
+%
+% ---------- Aide-mémoire de la syntaxe (exemples génériques, voir aussi ~/Desktop/sandbox.mcd) ----------
+% Entité :                ENTITÉ: identifiant, attribut, attribut
+%                         (le 1er attribut est l'identifiant)
+% Association binaire :   VERBE, 0N ENTITÉ_A, 11 ENTITÉ_B: attribut porté (facultatif)
+%                         cardinalités : 01, 11, 0N, 1N  =  (0,1) (1,1) (0,n) (1,n) du cours
+% Récursive (rôles) :     DIRIGER, 0N [chef] EMPLOYÉ, 01 [subordonné] EMPLOYÉ
+% Ternaire :              FOURNIR, 1N PROJET, 1N PIÈCE, 1N SOCIÉTÉ: quantité
+% Entité faible :         AYANT-DROIT: nom ayant-droit, lien
+%                         DF, _11 AYANT-DROIT, 0N EMPLOYÉ      (le _ devant 11 = identification relative)
+% Mise en page :          une ligne vide = nouvelle rangée dans le schéma
+% Générer l'image :       mocodo --input journal.mcd   (crée journal.svg et journal_static.svg)
+%
+% ---------- Les 35 données du dictionnaire et leur place dans le MCD ----------
+% [x]  1. Identifiant de l’utilisateur  →  UTILISATEUR · id utilisateur
+% [x]  2. Adresse e-mail de l’utilisateur  →  UTILISATEUR · email
+% [x]  3. Mot de passe chiffré ou haché du compte  →  UTILISATEUR · mot de passe
+% [x]  4. Date de création du compte utilisateur  →  UTILISATEUR · date création compte
+% [x]  5. Identifiant de la formule  →  FORMULE · id formule
+% [x]  6. Nom de la formule  →  FORMULE · nom formule
+% [x]  7. Prix mensuel de la formule  →  FORMULE · prix mensuel
+% [x]  8. Prix annuel de la formule  →  FORMULE · prix annuel
+% [x]  9. Quota mensuel de la formule  →  FORMULE · quota mensuel
+% [x] 10. Accès à l’approfondissement des idées  →  FORMULE · accès approfondissement
+% [x] 11. Accès aux agents autonomes  →  FORMULE · accès agents
+% [x] 12. Identifiant de l’abonnement  →  ABONNEMENT · id abonnement
+% [x] 13. Périodicité de l’abonnement  →  ABONNEMENT · périodicité
+% [x] 14. Date de début de l’abonnement  →  ABONNEMENT · date début abonnement
+% [x] 15. Date de fin de l’abonnement  →  ABONNEMENT · date fin abonnement
+% [x] 16. Identifiant du paiement  →  PAIEMENT · id paiement
+% [x] 17. Montant du paiement  →  PAIEMENT · montant paiement
+% [x] 18. Date du paiement  →  PAIEMENT · date paiement
+% [x] 19. État du paiement  →  PAIEMENT · état paiement
+% [x] 20. Identifiant de la dictée  →  DICTÉE · id dictée
+% [x] 21. Date et heure de la dictée  →  DICTÉE · date heure dictée
+% [x] 22. Contenu vocal de la dictée  →  DICTÉE · contenu vocal
+% [x] 23. Transcription de la dictée  →  DICTÉE · transcription
+% [x] 24. Identifiant de la demande  →  DEMANDE · id demande
+% [x] 25. Contenu de la demande adressée à l’application  →  DEMANDE · contenu demande
+% [x] 26. Identifiant de la note  →  NOTE · id note
+% [x] 27. Titre de la note  →  NOTE · titre note
+% [x] 28. Contenu de la note  →  VERSION · contenu version
+% [x] 29. Numéro de version de la note  →  VERSION · numéro version
+% [x] 30. Intitulé de la tâche  →  TÂCHE · intitulé tâche
+% [x] 31. État de la tâche  →  TÂCHE · état tâche
+% [x] 32. Intitulé du projet ou du sous-projet  →  PROJET · intitulé projet
+% [x] 33. Nom du service connecté  →  SERVICE · nom service
+% [x] 34. Droit accordé sur un service connecté  →  DROIT · libellé droit
+% [x] 35. Date d’enregistrement du parrainage  →  PARRAINER (association) · date parrainage
+%
+% Données ajoutées : id tâche, id projet, id service (identifiants des entités TÂCHE, PROJET, SERVICE)
+%
+% ---------- MCD ----------
+:
+PAIEMENT: id paiement, montant paiement, date paiement, état paiement
+RÉGLER, 11 PAIEMENT, 0N ABONNEMENT
+ABONNEMENT: id abonnement, périodicité, date début abonnement, date fin abonnement
+CONCERNER, 11 ABONNEMENT, 0N FORMULE
+FORMULE: id formule, nom formule, prix mensuel, prix annuel, quota mensuel, accès approfondissement, accès agents
+:
+
+:
+DEMANDE: id demande, contenu demande
+FORMULER, 0N UTILISATEUR, 11 DEMANDE
+SOUSCRIRE, 0N UTILISATEUR, 11 ABONNEMENT
+RATTACHER, 11 UTILISATEUR, 0N FORMULE
+AUTORISER, 0N UTILISATEUR, 0N SERVICE, 0N DROIT
+SERVICE: id service, nom service
+
+DÉCLENCHER, 01 DICTÉE, 01 DEMANDE
+DICTÉE: id dictée, date heure dictée, contenu vocal, transcription
+EFFECTUER, 0N UTILISATEUR, 11 DICTÉE
+UTILISATEUR: id utilisateur, email, mot de passe, date création compte
+PARRAINER, 0N [parrain] UTILISATEUR, 01 [filleul] UTILISATEUR: date parrainage
+DROIT: libellé droit
+:
+
+:
+PROVENIR, 01 NOTE, 0N DICTÉE
+ÉCRIRE, 0N UTILISATEUR, 11 NOTE
+GÉRER, 0N UTILISATEUR, 11 TÂCHE
+PILOTER, 0N UTILISATEUR, 11 PROJET
+:
+:
+
+VERSION: numéro version, contenu version
+AVOIR, _11 VERSION, 1N NOTE
+NOTE: id note, titre note
+TÂCHE: id tâche, intitulé tâche, état tâche
+INCLURE, 01 TÂCHE, 0N PROJET
+PROJET: id projet, intitulé projet
+DÉCOMPOSER, 0N [projet parent] PROJET, 01 [sous-projet] PROJET
