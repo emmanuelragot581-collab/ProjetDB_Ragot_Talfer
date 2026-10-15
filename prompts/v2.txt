@@ -1,0 +1,42 @@
+Tu travailles dans le domaine des SaaS, plus précisément sur les applications de prise de notes et d’assistance personnelle par intelligence artificielle.
+
+Ton entreprise a comme activité de :
+- proposer une application de journal personnel à commande vocale, sur téléphone et sur ordinateur.
+L'utilisateur lui parle dès qu'une idée ou une tâche lui vient, même en vrac et dans le désordre.
+- L'application retranscrit ce qui a été dit, puis le reformule avec la même présentation et le même ton que ses notes précédentes.
+- Elle range ensuite chaque élément au bon endroit : une note, une tâche, un projet avec ses pistes à explorer, ou un événement de l'agenda.
+(possibilité d'importer ses notes Apple existantes (ou autres notes) pour que l'application apprenne son style de réflexion et d'écriture)
+- Elle peut aussi agir à sa place sur l'appareil : modifier l'emploi du temps, ajouter des tâches ou faire des recherches
+(uniquement sur les services et avec les droits que l'utilisateur lui a accordés (lire, ajouter, modifier))
+- l'entreprise est "non-profit", l'application est gratuite dans la limite d'un quota mensuel de dictées et de demandes.
+   ->Chaque formule a un prix mensuel et un prix annuel (0 € pour la formule gratuite).
+   ->Des abonnements payants, mensuels ou annuels, financent les serveurs et débloquent deux options :
+        -l'approfondissement des idées (développer les pistes, proposer des hypothèses, entrer dans les détails);
+        -agents autonomes qui découpent un projet en tâches et le font avancer sans intervention de l'utilisateur.
+
+Ce qui n'est pas géré (initialement) :
+- le travail en équipe,
+- le partage de notes,
+- les tâches de programmation (pas un codex ou un claude code),
+- le fonctionnement interne des agents autonomes (géré par un outil externe : l'entreprise suit seulement qui a souscrit à cette option),
+- les événements de l'agenda eux-mêmes : ils restent dans le service d'agenda connecté, l'application n'en garde pas de copie.
+
+C’est une entreprise comme Notion (Notion AI), AudioPen, Voicenotes, Mem.
+
+Les données ont été collectées sur les utilisateurs et leurs comptes, les formules, les abonnements et les paiements, les dictées et leur transcription, les demandes faites à l'application, les notes et leurs versions successives, les tâches, les projets et leurs sous-projets, les services connectés et les droits accordés à l'application, ainsi que le parrainage entre utilisateurs.
+
+Pour le dictionnaire de données :
+- chaque donnée correspond à une seule information (par exemple, le titre d'une note et l'intitulé d'une tâche sont deux données différentes, pas une seule) ;
+- n'y mets pas les valeurs qui se calculent à partir d'autres données (par exemple le nombre de dictées utilisées dans le mois) ;
+- vérifie le total avant de répondre : il doit rester entre 25 et 35 données ;
+- réponds seulement avec les règles de gestion et le dictionnaire, sans commentaire sur les exemples cités.
+
+Inspire-toi des sites web suivants : https://www.notion.com/product/ai ; https://audiopen.ai ; https://voicenotes.com ; https://mem.ai ; https://support.apple.com/fr-fr/guide/notes/welcome/mac.
+
+Ton entreprise veut appliquer MERISE pour concevoir un système d'information. Tu es chargé de la partie analyse, c’est-à-dire de collecter les besoins auprès de l’entreprise. Elle a fait appel à un étudiant en ingénierie informatique pour réaliser ce projet, tu dois lui fournir les informations nécessaires pour qu’il applique ensuite lui-même les étapes suivantes de conception et développement de la base de données.
+
+D’abord, établis les règles de gestions des données de ton entreprise, sous la forme d'une liste à puce. Elle doit correspondre aux informations que fournit quelqu’un qui connaît le fonctionnement de l’entreprise, mais pas comment se construit un système d’information.
+
+Ensuite, à partir de ces règles, fournis un dictionnaire de données brutes avec les colonnes suivantes, regroupées dans un tableau : signification de la donnée, type, taille en nombre de caractères ou de chiffres. Il doit y avoir entre 25 et 35 données. Il sert à fournir des informations supplémentaires sur chaque donnée (taille et type) mais sans a priori sur comment les données vont être modélisées ensuite.
+
+Fournis donc les règles de gestion et le dictionnaire de données.
