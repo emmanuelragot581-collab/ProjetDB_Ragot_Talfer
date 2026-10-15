@@ -16,11 +16,13 @@ Conception d'une base de données avec la méthode **MERISE**.
 
 ## 1. Présentation du projet
 
-Notre domaine : une **application de journal personnel à commande vocale**, proposée en SaaS sur téléphone et sur ordinateur.
-L'utilisateur parle à l'application dès qu'une idée ou une tâche lui vient, même en vrac. L'application transcrit, reformule dans le style de ses notes précédentes, puis range chaque élément au bon endroit : note, tâche, projet ou agenda. Elle peut aussi agir pour lui sur les services qu'il a connectés (agenda, recherches).
-L'application est gratuite dans la limite d'un quota mensuel. Des abonnements payants financent les serveurs et débloquent deux options : l'approfondissement des idées et des agents autonomes.
+**Le problème :** on a parfois des idées passagères, mais élaborées et complexes, qui arrivent à un moment où l'on n'a pas le temps de s'arrêter pour les écrire dans ses notes. Faute de temps, elles sont oubliées, ou notées trop vite pour être réutilisables ensuite. Avec notre application, il suffit de l'ouvrir et de parler, en expliquant tout dans le désordre : le journal se charge de formaliser chaque idée et de la ranger là où elle doit aller (modifier l'emploi du temps, créer un nouveau projet avec des pistes à explorer, etc.).
 
-La base de données gère les comptes, les formules et abonnements, les paiements, les dictées et demandes, les notes et leurs versions, les tâches, les projets, les services connectés avec leurs droits, et le parrainage.
+Notre domaine : une **application de journal personnel à commande vocale**, proposée en SaaS sur téléphone et sur ordinateur.
+L'utilisateur parle à l'application dès qu'une idée ou une tâche lui vient, même en vrac. L'application transcrit, reformule dans le style de ses notes précédentes (en conservant « l'esprit » et le type de raisonnement), puis range chaque élément au bon endroit : note, tâche, projet ou agenda. Elle peut aussi agir pour lui sur les services qu'il a connectés (agenda, recherches, outils de stockage comme Obsidian ou Notion).
+L'application est gratuite dans la limite d'un quota mensuel, puisque chaque appel à l'IA nous coûte. Des abonnements payants financent les serveurs et débloquent deux options (pour l'instant) : l'approfondissement des idées et des agents autonomes.
+
+La base de données gère les comptes utilisateur, les formules et abonnements, les paiements, les dictées et demandes, les notes et leurs versions, les tâches, les projets, les services connectés avec leurs droits, et le parrainage.
 
 ---
 
