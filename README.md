@@ -10,7 +10,9 @@ Conception d'une base de données avec la méthode **MERISE**.
 2. [Analyse des besoins](#2-analyse-des-besoins)
 3. [Analyse des résultats de l'IA](#3-analyse-des-résultats-de-lia)
 4. [MCD](#4-mcd)
-5. [Organisation du dépôt](#5-organisation-du-dépôt)
+5. [MLD](#5-mld)
+6. [MPD : création des tables et contraintes](#6-mpd--création-des-tables-et-contraintes)
+7. [Organisation du dépôt](#7-organisation-du-dépôt)
 
 ---
 
@@ -293,12 +295,95 @@ Le MCD contient les trois éléments avancés vus en cours.
 
 ---
 
-## 5. Organisation du dépôt
+## 5. MLD
+
+MLD déduit du MCD avec les règles de transformation du cours (Mocodo produit la même chose automatiquement). Clés primaires <u>soulignées</u>, clés étrangères précédées de **#**. Les noms sont ceux du script SQL.
+
+- **formule** (<u>id_formule</u>, nom_formule, prix_mensuel, prix_annuel, quota_mensuel, acces_approfondissement, acces_agents)
+- **service** (<u>id_service</u>, nom_service)
+- **utilisateur** (<u>id_utilisateur</u>, email, mot_de_passe, date_creation_compte, #id_formule)
+- **parrainer** (<u>#id_filleul</u>, #id_parrain, date_parrainage) — *id_filleul et id_parrain font référence à utilisateur*
+- **abonnement** (<u>id_abonnement</u>, periodicite, date_debut, date_fin, #id_formule, #id_utilisateur)
+- **paiement** (<u>id_paiement</u>, montant, date_paiement, etat_paiement, #id_abonnement)
+- **dictee** (<u>id_dictee</u>, date_heure_dictee, chemin_audio, transcription, #id_utilisateur)
+- **demande** (<u>id_demande</u>, contenu_demande, #id_utilisateur, #id_dictee)
+- **note** (<u>id_note</u>, titre_note, #id_dictee, #id_utilisateur)
+- **version_note** (<u>#id_note, numero_version</u>, contenu_version)
+- **projet** (<u>id_projet</u>, intitule_projet, #id_utilisateur)
+- **decomposer** (<u>#id_sous_projet</u>, #id_projet_parent) — *les deux font référence à projet*
+- **tache** (<u>id_tache</u>, intitule_tache, etat_tache, #id_utilisateur, #id_projet)
+- **autoriser** (<u>#id_utilisateur, #id_service, libelle_droit</u>)
+
+**Règles appliquées et choix faits :**
+- **Associations (0,N)-(1,1) ou (0,N)-(0,1)** (RATTACHER, SOUSCRIRE, RÉGLER, EFFECTUER, ÉCRIRE…) : la clé de l'entité côté N migre comme clé étrangère dans la table côté 1. Elle accepte NULL quand la cardinalité minimale est 0 (par exemple `note.id_dictee` pour une note importée).
+- **Association (0,1)-(0,1) DÉCLENCHER** : la clé étrangère `id_dictee` est placée dans `demande`, avec une contrainte UNIQUE pour garantir qu'une dictée déclenche au plus une demande.
+- **Entité faible VERSION** : sa clé primaire est composée de la clé de NOTE et du numéro de version (`version_note`).
+- **Association ternaire AUTORISER** : elle devient une table dont la clé primaire réunit les trois identifiants. L'entité DROIT n'a pas d'autre attribut que son libellé : elle ne donne pas de table, et les valeurs possibles sont contrôlées par une contrainte CHECK.
+- **Associations récursives PARRAINER et DÉCOMPOSER** : la règle classique placerait une clé étrangère vers sa propre table (`id_parrain` dans utilisateur). Nous les avons traduites par une **table d'association** (`parrainer`, `decomposer`), dont la clé primaire est le filleul ou le sous-projet, ce qui garde la cardinalité 0,1. Raison : MySQL refuse `ON UPDATE CASCADE` sur une clé étrangère qui référence sa propre table, alors que le sujet demande que les modifications se répercutent sans erreur.
+- **« Contenu vocal » de la dictée** : on stocke l'emplacement du fichier audio (`chemin_audio`), pas le fichier lui-même, qui irait dans un stockage de fichiers.
+
+---
+
+## 6. MPD : création des tables et contraintes
+
+Les scripts sont dans [`sql/`](sql/) et s'exécutent dans cet ordre sous **MySQL 8** :
+
+| Script | Contenu |
+|---|---|
+| [`1_creation.sql`](sql/1_creation.sql) | Base `journal_vocal`, 14 tables, clés primaires, clés étrangères, `NOT NULL` |
+| [`2_contraintes.sql`](sql/2_contraintes.sql) | Contraintes de validation, ajoutées par `ALTER TABLE` |
+| [`3_insertion.sql`](sql/3_insertion.sql) | Données générées par l'IA (§7) |
+| [`4_interrogation.sql`](sql/4_interrogation.sql) | Requêtes du scénario d'utilisation (§9) |
+
+Chaque script commence par `SET NAMES utf8mb4;` : les accents (« réussi », « à faire »…) sont envoyés en UTF-8, quel que soit l'outil utilisé pour lancer le script.
+
+### 6.1 Modification et suppression d'une ligne référencée
+
+Le sujet demande que la modification ou la suppression d'une ligne référencée par une clé étrangère soit gérée **automatiquement, sans erreur**. Toutes les clés étrangères ont donc `ON UPDATE CASCADE` : si un identifiant change, il est mis à jour partout. Pour `ON DELETE`, nous avons choisi selon le sens de chaque lien :
+
+| Clé étrangère | `ON DELETE` | Pourquoi |
+|---|---|---|
+| `abonnement`, `dictee`, `demande`, `note`, `projet`, `tache`, `autoriser` → `utilisateur` | `CASCADE` | Ces données n'ont pas de sens sans leur propriétaire. Supprimer un compte supprime aussi toutes ses données, ce qui respecte le droit à l'effacement |
+| `paiement` → `abonnement` | `CASCADE` | Un paiement n'existe que pour un abonnement (cardinalité 1,1) |
+| `version_note` → `note` | `CASCADE` | Entité faible : « on détruit le composant quand on détruit le composé » |
+| `utilisateur` → `formule`, `abonnement` → `formule` | `SET NULL` | Si une formule est retirée de la vente, on garde les comptes et l'historique des abonnements et des paiements |
+| `note` → `dictee`, `demande` → `dictee` | `SET NULL` | Lien facultatif (0,1) : la note ou la demande reste, sans dictée d'origine |
+| `tache` → `projet` | `SET NULL` | Lien facultatif (0,1) : la tâche reste, sans projet |
+| `parrainer` → `utilisateur` (parrain et filleul) | `CASCADE` | Si l'un des deux comptes disparaît, le lien de parrainage disparaît, mais l'autre compte reste |
+| `decomposer` → `projet` (parent et sous-projet) | `CASCADE` | Si le projet parent disparaît, le lien disparaît et le sous-projet devient un projet indépendant |
+| `autoriser` → `service` | `CASCADE` | Si un service n'est plus proposé, les droits accordés sur ce service disparaissent |
+
+**Limite de MySQL rencontrée.** Au départ, le parrainage et les sous-projets étaient traduits par une clé étrangère vers leur propre table (`utilisateur.id_parrain`, `projet.id_projet_parent`), comme le veut la règle de transformation des associations (0,1). En testant, MySQL a refusé de modifier l'identifiant d'un parrain : InnoDB n'accepte pas `ON UPDATE CASCADE` sur une clé étrangère qui référence **sa propre table**. Nous avons donc traduit ces deux associations récursives par des tables (`parrainer`, `decomposer`), ce qui supprime l'erreur sans changer le MCD (§5).
+
+### 6.2 Contraintes de validation
+
+Chaque contrainte de [`2_contraintes.sql`](sql/2_contraintes.sql) traduit une règle de gestion (§2.2). Elles couvrent les différents cas vus en cours :
+
+| Cas du cours | Exemples |
+|---|---|
+| `UNIQUE` | E-mail de l'utilisateur, nom de la formule, nom du service, une seule demande par dictée |
+| `DEFAULT` | Date d'inscription = maintenant, paiement « en attente », tâche « à faire », options désactivées |
+| `CHECK` par énumération (`IN`) | Périodicité (mensuelle, annuelle), état du paiement, état de la tâche, type de droit (lecture, ajout, modification) |
+| `CHECK` par intervalle | Quota entre 1 et 100 000 (`BETWEEN`), prix ≥ 0, montant > 0, numéro de version ≥ 1 |
+| `CHECK` par masque (`LIKE`) | Format de l'e-mail, extension du fichier audio (.m4a, .mp3, .wav) |
+| `CHECK` sur une ligne (deux colonnes) | Date de fin d'abonnement après la date de début, prix annuel ≤ 12 × prix mensuel |
+
+---
+
+## 7. Organisation du dépôt
 
 ```
 ProjetDB_Ragot_Talfer/
-├── README.md        ← ce fichier
-├── prompts/         ← toutes les versions du prompt (v1, v2)
-├── reponses-ia/     ← réponse brute de l'IA pour chaque version
-└── mcd/             ← fichier source Mocodo (journal.mcd) et image (journal_static.svg) du MCD
+├── README.md            ← ce fichier
+├── prompts/             ← prompts de l'analyse des besoins (v1, v2) et prompt d'insertion
+├── reponses-ia/         ← réponse brute de l'IA pour chaque version du prompt
+├── mcd/                 ← fichier source Mocodo (journal.mcd) et image du MCD
+└── sql/
+    ├── 1_creation.sql       ← tables, clés primaires et étrangères
+    ├── 2_contraintes.sql    ← contraintes de validation
+    ├── 3_insertion.sql      ← données générées par l'IA
+    ├── 4_interrogation.sql  ← requêtes du scénario
+    └── demo_integrite.sql   ← démonstration des contraintes et des cascades (vidéo)
 ```
+
+**Lancer le projet :** dans MySQL Workbench (ou en ligne de commande), exécuter dans l'ordre `1_creation.sql`, `2_contraintes.sql`, `3_insertion.sql`, puis les requêtes de `4_interrogation.sql`. `demo_integrite.sql` se lance sur une base vide, juste après les deux premiers scripts.
