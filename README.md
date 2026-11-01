@@ -12,7 +12,8 @@ Conception d'une base de données avec la méthode **MERISE**.
 4. [MCD](#4-mcd)
 5. [MLD](#5-mld)
 6. [MPD : création des tables et contraintes](#6-mpd--création-des-tables-et-contraintes)
-7. [Organisation du dépôt](#7-organisation-du-dépôt)
+7. [Insertion des données](#7-insertion-des-données)
+8. [Organisation du dépôt](#8-organisation-du-dépôt)
 
 ---
 
@@ -370,7 +371,37 @@ Chaque contrainte de [`2_contraintes.sql`](sql/2_contraintes.sql) traduit une r�
 
 ---
 
-## 7. Organisation du dépôt
+## 7. Insertion des données
+
+- **Prompt :** [`prompts/insertion_v1.txt`](prompts/insertion_v1.txt). Il reprend la forme du prompt du TP1 : le modèle relationnel avec les clés, le nombre de lignes par table, les valeurs imposées (les 3 formules et les 6 services, comme les maisons du TP1), l'ordre de remplissage des tables, les contraintes SQL recopiées, des règles de cohérence entre les données, et la diversité des noms.
+- **IA utilisée :** Claude (Anthropic), le 18/10/2026.
+- **Résultat :** [`sql/3_insertion.sql`](sql/3_insertion.sql), **467 lignes** réparties dans les 14 tables.
+
+### 7.1 Vérification du résultat
+
+Le script s'exécute **sans aucune erreur** après `1_creation.sql` et `2_contraintes.sql` : aucune contrainte d'intégrité ni de validation n'est violée. Le nombre de lignes de chaque table est celui demandé dans le prompt (30 utilisateurs, 25 abonnements, 60 paiements, 50 dictées, 40 demandes, 40 notes et 80 versions, 20 projets dont 8 sous-projets, 50 tâches, 45 droits).
+
+Nous avons aussi vérifié les règles de cohérence du prompt qui ne sont pas des contraintes SQL :
+
+| Vérification | Résultat |
+|---|---|
+| Paiements en dehors de la période de leur abonnement | 0 |
+| Abonnements ou dictées antérieurs à la création du compte | 0 |
+| Notes ou demandes rattachées à la dictée d'un autre utilisateur | 0 |
+| Abonnements à la formule Gratuite | 0 |
+| Auto-parrainages | 0 |
+| Répartition des formules | Gratuite 12, Plus 11, Pro 7 |
+| États des paiements | réussi 51, échoué 5, remboursé 2, en attente 2 |
+| Notes importées (sans dictée) / demandes écrites (sans dictée) | 10 sur 40 / 12 sur 40 |
+
+### 7.2 Limites relevées
+- Le nombre de dictées par mois reste loin du quota de la formule Gratuite (30) : aucun utilisateur n'est « proche de son quota ». Le scénario cible donc plutôt les utilisateurs Gratuit les plus actifs.
+- Le contenu des versions de notes suit un modèle répétitif : il convient pour les requêtes, moins pour une démonstration du contenu.
+- Les montants payés sont toujours égaux au prix de la formule : il n'y a ni promotion ni paiement au prorata.
+
+---
+
+## 8. Organisation du dépôt
 
 ```
 ProjetDB_Ragot_Talfer/
