@@ -1,0 +1,64 @@
+Donne les requêtes d'insertion permettant de remplir la base de données dont le modèle relationnel est le suivant :
+formule (id_formule, nom_formule, prix_mensuel, prix_annuel, quota_mensuel, acces_approfondissement, acces_agents) ; clé primaire : id_formule
+service (id_service, nom_service) ; clé primaire : id_service
+utilisateur (id_utilisateur, email, mot_de_passe, date_creation_compte, #id_formule) ; clé primaire : id_utilisateur
+parrainer (#id_filleul, #id_parrain, date_parrainage) ; clé primaire : id_filleul ; id_filleul et id_parrain font référence à id_utilisateur
+abonnement (id_abonnement, periodicite, date_debut, date_fin, #id_formule, #id_utilisateur) ; clé primaire : id_abonnement
+paiement (id_paiement, montant, date_paiement, etat_paiement, #id_abonnement) ; clé primaire : id_paiement
+dictee (id_dictee, date_heure_dictee, chemin_audio, transcription, #id_utilisateur) ; clé primaire : id_dictee
+demande (id_demande, contenu_demande, #id_utilisateur, #id_dictee) ; clé primaire : id_demande
+note (id_note, titre_note, #id_dictee, #id_utilisateur) ; clé primaire : id_note
+version_note (#id_note, numero_version, contenu_version) ; clé primaire : (id_note, numero_version)
+projet (id_projet, intitule_projet, #id_utilisateur) ; clé primaire : id_projet
+decomposer (#id_sous_projet, #id_projet_parent) ; clé primaire : id_sous_projet ; id_sous_projet et id_projet_parent font référence à id_projet
+tache (id_tache, intitule_tache, etat_tache, #id_utilisateur, #id_projet) ; clé primaire : id_tache
+autoriser (#id_utilisateur, #id_service, libelle_droit) ; clé primaire : (id_utilisateur, id_service, libelle_droit)
+
+Les clés primaires correspondent aux id, sauf si autre chose est précisé (quand c'est un attribut composé) ; les clés étrangères sont identifiées par les #, et ont le même nom que les clés primaires auxquelles elles font référence, sauf id_filleul et id_parrain (qui font référence à id_utilisateur) et id_sous_projet et id_projet_parent (qui font référence à id_projet).
+
+Il doit y avoir : 6 services, 30 utilisateurs, 10 parrainages, 25 abonnements, 60 paiements, 50 dictées, 40 demandes, 40 notes avec au total 80 versions, 20 projets dont 8 sont des sous-projets d'un autre projet, 50 tâches et 45 droits accordés.
+Les formules sont au nombre de 3, dont voici les caractéristiques :
+- nom : Gratuite, prix mensuel : 0, prix annuel : 0, quota mensuel : 30, approfondissement : non, agents autonomes : non
+- nom : Plus, prix mensuel : 4.99, prix annuel : 49.90, quota mensuel : 500, approfondissement : oui, agents autonomes : non
+- nom : Pro, prix mensuel : 11.99, prix annuel : 119.90, quota mensuel : 3000, approfondissement : oui, agents autonomes : oui
+Les services sont : Calendrier Apple, Google Agenda, Notes Apple, Notion, Obsidian, Recherche web.
+
+Les clés étrangères doivent faire référence aux clés primaires existantes : donne les lignes en commençant par remplir les tables dans lesquelles il n'y a pas de clés étrangères, puis les tables dans lesquelles les clés étrangères font référence à des clés primaires des tables déjà remplies.
+
+Les données doivent respecter les contraintes de validation suivantes :
+ALTER TABLE utilisateur ADD CONSTRAINT uq_utilisateur_email UNIQUE (email);
+ALTER TABLE utilisateur ADD CONSTRAINT ck_utilisateur_email CHECK (email LIKE '_%@_%._%');
+ALTER TABLE utilisateur ALTER COLUMN date_creation_compte SET DEFAULT (CURRENT_TIMESTAMP);
+ALTER TABLE utilisateur ADD CONSTRAINT ck_utilisateur_mdp CHECK (CHAR_LENGTH(mot_de_passe) >= 60);
+ALTER TABLE formule ADD CONSTRAINT uq_formule_nom UNIQUE (nom_formule);
+ALTER TABLE formule ADD CONSTRAINT ck_formule_prix CHECK (prix_mensuel >= 0 AND prix_annuel >= 0);
+ALTER TABLE formule ADD CONSTRAINT ck_formule_prix_annuel CHECK (prix_annuel <= 12 * prix_mensuel);
+ALTER TABLE formule ADD CONSTRAINT ck_formule_quota CHECK (quota_mensuel BETWEEN 1 AND 100000);
+ALTER TABLE formule ALTER COLUMN acces_approfondissement SET DEFAULT FALSE;
+ALTER TABLE formule ALTER COLUMN acces_agents SET DEFAULT FALSE;
+ALTER TABLE abonnement ADD CONSTRAINT ck_abonnement_periodicite CHECK (periodicite IN ('mensuelle', 'annuelle'));
+ALTER TABLE abonnement ADD CONSTRAINT ck_abonnement_dates CHECK (date_fin IS NULL OR date_fin > date_debut);
+ALTER TABLE paiement ADD CONSTRAINT ck_paiement_montant CHECK (montant > 0);
+ALTER TABLE paiement ADD CONSTRAINT ck_paiement_etat CHECK (etat_paiement IN ('en attente', 'réussi', 'échoué', 'remboursé'));
+ALTER TABLE paiement ALTER COLUMN etat_paiement SET DEFAULT 'en attente';
+ALTER TABLE dictee ADD CONSTRAINT ck_dictee_audio CHECK (chemin_audio LIKE '%.m4a' OR chemin_audio LIKE '%.mp3' OR chemin_audio LIKE '%.wav');
+ALTER TABLE demande ADD CONSTRAINT uq_demande_dictee UNIQUE (id_dictee);
+ALTER TABLE version_note ADD CONSTRAINT ck_version_numero CHECK (numero_version >= 1);
+ALTER TABLE tache ADD CONSTRAINT ck_tache_etat CHECK (etat_tache IN ('à faire', 'en cours', 'terminée'));
+ALTER TABLE tache ALTER COLUMN etat_tache SET DEFAULT 'à faire';
+ALTER TABLE service ADD CONSTRAINT uq_service_nom UNIQUE (nom_service);
+ALTER TABLE autoriser ADD CONSTRAINT ck_autoriser_droit CHECK (libelle_droit IN ('lecture', 'ajout', 'modification'));
+ALTER TABLE dictee ADD CONSTRAINT ck_dictee_transcription CHECK (transcription IS NULL OR CHAR_LENGTH(transcription) > 0);
+
+Les données doivent aussi être cohérentes entre elles :
+- les dates vont du 01/01/2025 au 15/10/2026 ; une dictée, une note ou un abonnement est postérieur à la création du compte de son utilisateur ;
+- les abonnements portent seulement sur les formules Plus et Pro, et les paiements tombent entre le début et la fin de leur abonnement ;
+- certains utilisateurs restent sur la formule Gratuite sans abonnement, certains paiements sont échoués ou remboursés, et les tâches sont dans les trois états ;
+- environ un quart des notes n'ont pas de dictée d'origine (notes importées) et certaines demandes n'ont pas de dictée (demandes écrites) ;
+- une dictée déclenche au plus une demande ; un utilisateur ne se parraine pas lui-même ;
+- les mots de passe sont des empreintes bcrypt de 60 caractères ;
+- les transcriptions, notes, tâches et demandes ressemblent à de vraies idées dictées en vrac (projets personnels, études, sport, travail).
+
+Assure-toi que les noms et adresses e-mail des utilisateurs font référence à des origines variées et sont mixtes.
+
+Fournis l'ensemble sous la forme d'un script SQL prêt à être exécuté, qui commence par USE journal_vocal;
