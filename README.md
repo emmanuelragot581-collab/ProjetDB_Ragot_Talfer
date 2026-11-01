@@ -13,7 +13,9 @@ Conception d'une base de données avec la méthode **MERISE**.
 5. [MLD](#5-mld)
 6. [MPD : création des tables et contraintes](#6-mpd--création-des-tables-et-contraintes)
 7. [Insertion des données](#7-insertion-des-données)
-8. [Organisation du dépôt](#8-organisation-du-dépôt)
+8. [Scénario d'utilisation](#8-scénario-dutilisation)
+9. [Requêtes d'interrogation](#9-requêtes-dinterrogation)
+10. [Organisation du dépôt](#10-organisation-du-dépôt)
 
 ---
 
@@ -401,7 +403,37 @@ Nous avons aussi vérifié les règles de cohérence du prompt qui ne sont pas d
 
 ---
 
-## 8. Organisation du dépôt
+## 8. Scénario d'utilisation
+
+**Qui :** Camille, responsable marketing.
+**Pour quoi faire :** préparer la campagne d'automne **« Passe à Plus »**. L'application est gratuite pour l'essentiel et ce sont les abonnements qui paient les serveurs : Camille veut faire passer des utilisateurs de la formule Gratuite à Plus ou à Pro, sans budget publicitaire.
+
+**Ce qu'elle doit extraire de la base :**
+1. La taille de chaque public (combien d'utilisateurs par formule) et la liste de diffusion des utilisateurs Gratuit.
+2. Les utilisateurs Gratuit **les plus actifs**, et ceux qui dictent plus que certains abonnés payants : ce sont les meilleurs candidats.
+3. Les utilisateurs qui n'ont **jamais** payé, et les **anciens abonnés** à reconquérir.
+4. Les **paiements échoués ou en attente**, avec l'e-mail de l'abonné, pour une relance.
+5. Les **meilleurs parrains**, à récompenser par un mois offert pour en faire des ambassadeurs.
+6. Les services connectés les plus utilisés, et les utilisateurs Gratuit qui ont déjà connecté un agenda, pour adapter le message (avec Plus : 3 services connectés).
+7. Les utilisateurs intéressés par les agents autonomes (offre Pro) et ceux qui structurent déjà leurs idées en projets et sous-projets.
+8. Le chiffre d'affaires encaissé par mois, pour comparer avec les campagnes précédentes.
+
+---
+
+## 9. Requêtes d'interrogation
+
+Toutes les requêtes sont dans [`sql/4_interrogation.sql`](sql/4_interrogation.sql), chacune précédée d'un commentaire qui indique les données recherchées.
+
+| Type | Requêtes | Ce qu'elles montrent |
+|---|---|---|
+| **Projections et sélections** (tri, `DISTINCT`, `LIKE`, `IN`, `BETWEEN`) | A1 à A5 | Nouveaux inscrits de 2026, adresses Gmail (pour Google Agenda), paiements à relancer, utilisateurs actifs en septembre-octobre, demandes qui parlent d'agents |
+| **Agrégations** (`GROUP BY`, `HAVING`) | G1 à G5 | Utilisateurs par formule, chiffre d'affaires par mois, utilisateurs avec au moins 3 dictées, parrains avec au moins 2 filleuls, montants par état de paiement |
+| **Jointures** (interne, externe, multiple, table jointe à elle-même) | J1 à J5 | Liste de diffusion Gratuite, dictées de chaque utilisateur Gratuit (même zéro), paiements échoués avec e-mail et formule (4 tables), parrain et filleul côte à côte, utilisation de chaque service (même zéro) |
+| **Requêtes imbriquées** (`IN`, `NOT IN`, `NOT EXISTS`, `EXISTS`, `ANY`, `ALL`) | N1 à N6 | Utilisateurs Gratuit avec un agenda connecté, jamais abonnés, anciens abonnés, utilisateur le plus actif, utilisateurs Gratuit plus actifs qu'au moins un abonné Plus, projets découpés en sous-projets |
+
+---
+
+## 10. Organisation du dépôt
 
 ```
 ProjetDB_Ragot_Talfer/
