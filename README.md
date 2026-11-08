@@ -1,42 +1,24 @@
 # ProjetDB_Ragot_Talfer
 
-Mini-projet du module **TI503N – Bases de données 1 : concepts de base** (Efrei).
-Conception d'une base de données avec la méthode **MERISE**.
+Mini-projet de Bases de données 1 : conception d'une base de données avec la méthode MERISE, puis création et interrogation sous MySQL.
 
-**Binôme :** Emmanuel RAGOT · Tunui TALFER
-
-## Sommaire
-1. [Présentation du projet](#1-présentation-du-projet)
-2. [Analyse des besoins](#2-analyse-des-besoins)
-3. [Analyse des résultats de l'IA](#3-analyse-des-résultats-de-lia)
-4. [MCD](#4-mcd)
-5. [MLD](#5-mld)
-6. [MPD : création des tables et contraintes](#6-mpd--création-des-tables-et-contraintes)
-7. [Insertion des données](#7-insertion-des-données)
-8. [Scénario d'utilisation](#8-scénario-dutilisation)
-9. [Requêtes d'interrogation](#9-requêtes-dinterrogation)
-10. [Organisation du dépôt](#10-organisation-du-dépôt)
-
----
+Binôme : Emmanuel RAGOT et Tunui TALFER
 
 ## 1. Présentation du projet
 
-**Le problème :** on a parfois des idées passagères, mais élaborées et complexes, qui arrivent à un moment où l'on n'a pas le temps de s'arrêter pour les écrire dans ses notes. Faute de temps, elles sont oubliées, ou notées trop vite pour être réutilisables ensuite. Avec notre application, il suffit de l'ouvrir et de parler, en expliquant tout dans le désordre : le journal se charge de formaliser chaque idée et de la ranger là où elle doit aller (modifier l'emploi du temps, créer un nouveau projet avec des pistes à explorer, etc.).
+Le problème : on a parfois des idées passagères, mais élaborées et complexes, qui arrivent à un moment où l'on n'a pas le temps de s'arrêter pour les écrire dans ses notes. Faute de temps, elles sont oubliées, ou notées trop vite pour être réutilisables ensuite. Avec notre application, il suffit de l'ouvrir et de parler, en expliquant tout dans le désordre : le journal se charge de formaliser chaque idée et de la ranger là où elle doit aller (modifier l'emploi du temps, créer un nouveau projet avec des pistes à explorer, etc.).
 
-Notre domaine : une **application de journal personnel à commande vocale**, proposée en SaaS sur téléphone et sur ordinateur.
-L'utilisateur parle à l'application dès qu'une idée ou une tâche lui vient, même en vrac. L'application transcrit, reformule dans le style de ses notes précédentes (en conservant « l'esprit » et le type de raisonnement), puis range chaque élément au bon endroit : note, tâche, projet ou agenda. Elle peut aussi agir pour lui sur les services qu'il a connectés (agenda, recherches, outils de stockage comme Obsidian ou Notion).
-L'application est gratuite dans la limite d'un quota mensuel, puisque chaque appel à l'IA nous coûte. Des abonnements payants financent les serveurs et débloquent deux options (pour l'instant) : l'approfondissement des idées et des agents autonomes.
+Notre domaine est donc une application de journal personnel à commande vocale, sur téléphone et sur ordinateur. L'utilisateur parle à l'application, elle transcrit, reformule dans le style de ses notes, puis range chaque élément dans une note, une tâche, un projet ou l'agenda. Elle peut aussi agir sur les services qu'il a connectés (agenda, Notion, Obsidian...).
 
-La base de données gère les comptes utilisateur, les formules et abonnements, les paiements, les dictées et demandes, les notes et leurs versions, les tâches, les projets, les services connectés avec leurs droits, et le parrainage.
+L'application est gratuite dans la limite d'un quota par mois. Des abonnements payants financent les serveurs et donnent accès à deux options : l'approfondissement des idées et des agents autonomes.
 
----
+La base de données gère les comptes, les formules, les abonnements et les paiements, les dictées et les demandes, les notes et leurs versions, les tâches et les projets, les services connectés avec leurs droits, et le parrainage.
 
 ## 2. Analyse des besoins
 
 ### 2.1 Prompt final (v2)
 
-Le prompt suit le framework **RICARDO** à partir de la base fournie : nous avons complété les parties à compléter (domaine, activité, exemples, données collectées, références) et ajouté des précisions sur le périmètre et sur le dictionnaire. Les autres paragraphes sont inchangés.
-Toutes les versions sont dans [`prompts/`](prompts/) et les réponses brutes de l'IA dans [`reponses-ia/`](reponses-ia/).
+On est partis de la base de prompt fournie (framework RICARDO). On a complété les parties à compléter (domaine, activité, exemples, données collectées, références) et ajouté quelques précisions sur le périmètre et sur le dictionnaire. Toutes les versions sont dans `prompts/` et les réponses de l'IA dans `reponses-ia/`.
 
 ```text
 Tu travailles dans le domaine des SaaS, plus précisément sur les applications de prise de notes et d’assistance personnelle par intelligence artificielle.
@@ -85,7 +67,7 @@ Fournis donc les règles de gestion et le dictionnaire de données.
 
 ### 2.2 Règles de gestion
 
-Règles renvoyées par l'IA pour le prompt v2 (réponse brute : [`reponses-ia/v2.md`](reponses-ia/v2.md)).
+Règles renvoyées par l'IA pour le prompt v2 (réponse complète dans `reponses-ia/v2.md`) :
 
 - Un utilisateur possède un compte personnel identifié par une adresse e-mail et peut utiliser l’application sur téléphone et sur ordinateur.
 - Un utilisateur est rattaché à une seule formule à la fois.
@@ -124,7 +106,7 @@ Règles renvoyées par l'IA pour le prompt v2 (réponse brute : [`reponses-ia/v2
 
 ### 2.3 Dictionnaire de données (35 données)
 
-Dictionnaire renvoyé par l'IA pour le prompt v2, **après retrait de 2 données en double** (voir [§3.3](#33-modifications-apportées)).
+Dictionnaire renvoyé par l'IA pour le prompt v2, après avoir retiré 2 données en double (voir 3.3).
 
 | # | Signification de la donnée | Type | Taille |
 |---|---|---|---:|
@@ -164,289 +146,142 @@ Dictionnaire renvoyé par l'IA pour le prompt v2, **après retrait de 2 données
 | 34 | Droit accordé sur un service connecté | Chaîne de caractères | 20 caractères |
 | 35 | Date d’enregistrement du parrainage | Date et heure | 19 caractères |
 
----
-
 ## 3. Analyse des résultats de l'IA
 
-IA utilisée : **Luna 6** (réglage « moyen »), une nouvelle conversation à chaque version, prompt collé en entier.
+IA utilisée : Luna 6 (réglage moyen), avec une nouvelle conversation à chaque version et le prompt collé en entier.
 
-### 3.1 Version 1
+### 3.1 Version 1 (`reponses-ia/v1.md`)
 
-Réponse : [`reponses-ia/v1.md`](reponses-ia/v1.md)
+Problèmes relevés :  
+-> 36 données, alors que la limite est 35.  
+-> 7 données mélangent plusieurs informations, par exemple "titre d'une note, tâche, d'un projet ou d'un événement".  
+-> Une donnée se calcule à partir des autres : le nombre de dictées utilisées pendant la période.  
+-> Les prix des formules n'apparaissent pas, alors que l'application vend des abonnements.  
+-> L'IA commente les exemples cités, ce qu'on ne lui demandait pas.  
 
-| Problème relevé | Correction dans la v2 |
-|---|---|
-| **36 données**, au-dessus de la limite de 35 | Périmètre resserré (les événements de l'agenda restent dans l'agenda connecté) et rappel du total à vérifier |
-| **7 données mélangent plusieurs informations** (« titre d'une note, tâche, d'un projet ou d'un événement », « contenu d'une note ou d'une version de note », « date de fin ou de renouvellement »…) | Consigne : une donnée = une seule information |
-| **Donnée calculable** : « nombre de dictées utilisées pendant la période » se déduit des dictées | Consigne : pas de valeurs calculables |
-| **Prix des formules absent**, alors que l'application vend des abonnements | Prix mensuel et annuel ajoutés au contexte |
-| Commentaire sur les exemples cités, hors du rôle demandé | Consigne : répondre seulement avec les règles et le dictionnaire |
+Pour la v2, on a précisé dans le prompt : une donnée = une seule information, pas de valeurs calculables, vérifier le total, répondre seulement avec les règles et le dictionnaire. On a aussi ajouté les prix des formules dans le contexte et sorti les événements de l'agenda du périmètre.
 
-### 3.2 Version 2
+### 3.2 Version 2 (`reponses-ia/v2.md`)
 
-Réponse : [`reponses-ia/v2.md`](reponses-ia/v2.md)
-
-Tous les problèmes de la v1 sont corrigés, sauf le nombre de données : **37**.
-
-| | v1 | v2 |
-|---|---|---|
-| Nombre de données | 36 | 37 |
-| Données mélangeant plusieurs informations | 7 | 0 |
-| Données calculables | 1 | 0 |
-| Prix des formules | absent | présent |
-| Commentaire hors rôle | oui | non |
-
-Problèmes restants dans la v2 :
-- « Identifiant de l'utilisateur parrain » et « Identifiant de l'utilisateur filleul » font **double emploi** avec « Identifiant de l'utilisateur » : un parrain et un filleul sont tous les deux des utilisateurs.
-- La taille du « contenu vocal de la dictée » est donnée en **Mo**, alors que le prompt demande une taille en caractères ou en chiffres.
+Les problèmes de la v1 sont corrigés, sauf le nombre de données qui passe à 37. Il reste aussi deux défauts :  
+-> "Identifiant de l'utilisateur parrain" et "Identifiant de l'utilisateur filleul" font double emploi avec "Identifiant de l'utilisateur", puisqu'un parrain et un filleul sont des utilisateurs.  
+-> La taille du contenu vocal est donnée en Mo, alors que le prompt demande des caractères ou des chiffres.  
 
 ### 3.3 Modifications apportées
 
-Comme le sujet l'autorise quand il reste trop de données après plusieurs essais, nous avons **retiré 2 données** du dictionnaire de la v2 :
+Comme le sujet l'autorise, on a retiré du dictionnaire les 2 données en double (identifiant du parrain et identifiant du filleul). Le parrainage reste décrit par sa règle de gestion et par la date du parrainage. Le dictionnaire final a donc 35 données.
 
-| Donnée retirée | Raison |
-|---|---|
-| Identifiant de l'utilisateur parrain | Même information que « Identifiant de l'utilisateur » |
-| Identifiant de l'utilisateur filleul | Même information que « Identifiant de l'utilisateur » |
-
-Le parrainage reste décrit par la règle « une relation de parrainage associe un parrain et un filleul » et par la donnée « Date d'enregistrement du parrainage ». Le dictionnaire final compte **35 données**.
-
-Nous n'avons pas modifié la taille du contenu vocal, puisque le sujet autorise seulement à retirer des données. Nous en tiendrons compte dans la suite du projet.
-
----
+On n'a pas modifié la taille du contenu vocal, puisque le sujet autorise seulement à retirer des données. Dans la base, on stocke donc seulement le chemin du fichier audio (`chemin_audio`).
 
 ## 4. MCD
 
-### 4.1 Schéma
-
 ![MCD](mcd/journal_static.svg)
 
-### 4.2 Fichier source
+Le MCD a été fait avec Mocodo, le fichier source est `mcd/journal.mcd`.
 
-Le MCD a été réalisé avec **Mocodo** (version 4.3.3) : [`mcd/journal.mcd`](mcd/journal.mcd).
-Pour régénérer l'image : `mocodo --input journal.mcd` dans le dossier `mcd/`.
-
-### 4.3 Correspondance dictionnaire → MCD
-
-Chaque donnée du dictionnaire (§2.3) et sa place dans le MCD.
-
-| # | Donnée | Entité ou association | Attribut |
-|---|---|---|---|
-| 1 | Identifiant de l’utilisateur | UTILISATEUR | id utilisateur |
-| 2 | Adresse e-mail de l’utilisateur | UTILISATEUR | email |
-| 3 | Mot de passe chiffré ou haché du compte | UTILISATEUR | mot de passe |
-| 4 | Date de création du compte utilisateur | UTILISATEUR | date création compte |
-| 5 | Identifiant de la formule | FORMULE | id formule |
-| 6 | Nom de la formule | FORMULE | nom formule |
-| 7 | Prix mensuel de la formule | FORMULE | prix mensuel |
-| 8 | Prix annuel de la formule | FORMULE | prix annuel |
-| 9 | Quota mensuel de la formule | FORMULE | quota mensuel |
-| 10 | Accès à l’approfondissement des idées | FORMULE | accès approfondissement |
-| 11 | Accès aux agents autonomes | FORMULE | accès agents |
-| 12 | Identifiant de l’abonnement | ABONNEMENT | id abonnement |
-| 13 | Périodicité de l’abonnement | ABONNEMENT | périodicité |
-| 14 | Date de début de l’abonnement | ABONNEMENT | date début abonnement |
-| 15 | Date de fin de l’abonnement | ABONNEMENT | date fin abonnement |
-| 16 | Identifiant du paiement | PAIEMENT | id paiement |
-| 17 | Montant du paiement | PAIEMENT | montant paiement |
-| 18 | Date du paiement | PAIEMENT | date paiement |
-| 19 | État du paiement | PAIEMENT | état paiement |
-| 20 | Identifiant de la dictée | DICTÉE | id dictée |
-| 21 | Date et heure de la dictée | DICTÉE | date heure dictée |
-| 22 | Contenu vocal de la dictée | DICTÉE | contenu vocal |
-| 23 | Transcription de la dictée | DICTÉE | transcription |
-| 24 | Identifiant de la demande | DEMANDE | id demande |
-| 25 | Contenu de la demande adressée à l’application | DEMANDE | contenu demande |
-| 26 | Identifiant de la note | NOTE | id note |
-| 27 | Titre de la note | NOTE | titre note |
-| 28 | Contenu de la note | VERSION | contenu version |
-| 29 | Numéro de version de la note | VERSION | numéro version |
-| 30 | Intitulé de la tâche | TÂCHE | intitulé tâche |
-| 31 | État de la tâche | TÂCHE | état tâche |
-| 32 | Intitulé du projet ou du sous-projet | PROJET | intitulé projet |
-| 33 | Nom du service connecté | SERVICE | nom service |
-| 34 | Droit accordé sur un service connecté | DROIT | libellé droit |
-| 35 | Date d’enregistrement du parrainage | PARRAINER (association) | date parrainage |
-
-**Données ajoutées** par rapport au dictionnaire : `id tâche`, `id projet` et `id service`, les identifiants des entités TÂCHE, PROJET et SERVICE (le sujet autorise à ajouter des données).
-
-### 4.4 Éléments de modélisation avancés
-
-Le MCD contient les trois éléments avancés vus en cours.
-
-| Élément | Où dans le MCD | Règle de gestion qui le justifie (§2.2) |
-|---|---|---|
-| **Association récursive** | **PARRAINER** : UTILISATEUR (rôle *parrain*, 0,N) → UTILISATEUR (rôle *filleul*, 0,1), avec la date du parrainage | « Un utilisateur peut parrainer un autre utilisateur ; une relation de parrainage associe un parrain et un filleul. » |
-| **Association récursive** | **DÉCOMPOSER** : PROJET (rôle *projet parent*, 0,N) → PROJET (rôle *sous-projet*, 0,1) | « Un projet […] peut contenir des sous-projets » et « Un sous-projet appartient à un projet » |
-| **Entité faible** | **VERSION**, identifiée par sa note + son numéro de version (association **AVOIR**, cardinalité 1,1 relative) | « Chaque modification importante du contenu d'une note constitue une nouvelle version de cette note ; les versions précédentes sont conservées. » |
-| **Association ternaire** | **AUTORISER** : UTILISATEUR – SERVICE – DROIT | « Pour chaque service connecté, les droits accordés à l'application sont définis séparément pour la lecture, l'ajout et la modification. » |
-
-**Pourquoi ces choix :**
-- **Sous-projet = projet.** Un sous-projet a les mêmes informations qu'un projet (un intitulé, un propriétaire, des tâches). Une seule entité PROJET reliée à elle-même évite de dupliquer la structure. Un sous-projet n'a qu'un seul projet parent (0,1).
-- **Version faible.** Un numéro de version (1, 2, 3…) n'a de sens qu'à l'intérieur de sa note, et une version n'existe pas sans sa note. VERSION n'a donc pas d'identifiant propre : elle est identifiée relativement à NOTE.
-- **Ternaire plutôt que binaires.** Un droit n'a de sens que pour **un utilisateur, sur un service, pour un type d'action** à la fois. Deux utilisateurs peuvent accorder des droits différents sur le même service, et un utilisateur peut accorder la lecture sur son agenda mais pas la modification. Trois associations binaires ne permettraient pas de savoir quel droit va avec quel service pour quel utilisateur.
-
-### 4.5 Normalisation (3FN)
-
-- **1FN** : chaque attribut contient une seule valeur. Les droits ne sont pas stockés sous forme de liste (« lecture, ajout ») : chaque droit accordé est une occurrence de AUTORISER.
-- **2FN** : seule VERSION a un identifiant composé (note + numéro de version). Son seul attribut, `contenu version`, dépend bien des deux à la fois.
-- **3FN** : aucun attribut ne dépend d'un autre attribut non identifiant.
-  - Les prix, le quota et les options sont dans FORMULE, pas dans ABONNEMENT ni dans UTILISATEUR.
-  - Le montant d'un paiement est dans PAIEMENT : il peut différer du prix de la formule (paiement partiel, remboursement).
-  - Aucune donnée calculable n'est stockée : le nombre de dictées et de demandes utilisées dans le mois se calcule en comptant les DICTÉE et les DEMANDE de l'utilisateur.
-  - RATTACHER et ABONNEMENT ne font pas double emploi : RATTACHER donne la formule **actuelle** de chaque utilisateur, y compris la formule gratuite, qui ne donne lieu à aucun abonnement ; ABONNEMENT garde l'**historique** des souscriptions payantes (périodicité, dates, paiements).
-
----
+Éléments de cours :  
+-> deux associations récursives : PARRAINER (un utilisateur parraine un autre utilisateur) et DÉCOMPOSER (un projet contient des sous-projets). Un sous-projet a les mêmes informations qu'un projet, donc on n'a pas fait d'entité à part.  
+-> une entité faible : VERSION. Un numéro de version n'a de sens que dans sa note, donc une version est identifiée par sa note et son numéro.  
+-> une association ternaire : AUTORISER, entre UTILISATEUR, SERVICE et DROIT. Un droit (lecture, ajout ou modification) n'a de sens que pour un utilisateur et un service en même temps. Avec trois associations binaires, on ne saurait plus quel droit va avec quel service pour quel utilisateur.  
 
 ## 5. MLD
 
-MLD déduit du MCD avec les règles de transformation du cours (Mocodo produit la même chose automatiquement). Clés primaires <u>soulignées</u>, clés étrangères précédées de **#**. Les noms sont ceux du script SQL.
+Avec les règles de transformation du cours (clés primaires soulignées et clés étrangères avec un #) :
 
-- **formule** (<u>id_formule</u>, nom_formule, prix_mensuel, prix_annuel, quota_mensuel, acces_approfondissement, acces_agents)
-- **service** (<u>id_service</u>, nom_service)
-- **utilisateur** (<u>id_utilisateur</u>, email, mot_de_passe, date_creation_compte, #id_formule)
-- **parrainer** (<u>#id_filleul</u>, #id_parrain, date_parrainage) — *id_filleul et id_parrain font référence à utilisateur*
-- **abonnement** (<u>id_abonnement</u>, periodicite, date_debut, date_fin, #id_formule, #id_utilisateur)
-- **paiement** (<u>id_paiement</u>, montant, date_paiement, etat_paiement, #id_abonnement)
-- **dictee** (<u>id_dictee</u>, date_heure_dictee, chemin_audio, transcription, #id_utilisateur)
-- **demande** (<u>id_demande</u>, contenu_demande, #id_utilisateur, #id_dictee)
-- **note** (<u>id_note</u>, titre_note, #id_dictee, #id_utilisateur)
-- **version_note** (<u>#id_note, numero_version</u>, contenu_version)
-- **projet** (<u>id_projet</u>, intitule_projet, #id_utilisateur)
-- **decomposer** (<u>#id_sous_projet</u>, #id_projet_parent) — *les deux font référence à projet*
-- **tache** (<u>id_tache</u>, intitule_tache, etat_tache, #id_utilisateur, #id_projet)
-- **autoriser** (<u>#id_utilisateur, #id_service, libelle_droit</u>)
+-> formule (<u>id_formule</u>, nom_formule, prix_mensuel, prix_annuel, quota_mensuel, acces_approfondissement, acces_agents)  
+-> service (<u>id_service</u>, nom_service)  
+-> utilisateur (<u>id_utilisateur</u>, email, mot_de_passe, date_creation_compte, #id_formule)  
+-> parrainer (<u>#id_filleul</u>, #id_parrain, date_parrainage) (id_filleul et id_parrain font référence à utilisateur)  
+-> abonnement (<u>id_abonnement</u>, periodicite, date_debut, date_fin, #id_formule, #id_utilisateur)  
+-> paiement (<u>id_paiement</u>, montant, date_paiement, etat_paiement, #id_abonnement)  
+-> dictee (<u>id_dictee</u>, date_heure_dictee, chemin_audio, transcription, #id_utilisateur)  
+-> demande (<u>id_demande</u>, contenu_demande, #id_utilisateur, #id_dictee)  
+-> note (<u>id_note</u>, titre_note, #id_dictee, #id_utilisateur)  
+-> version_note (<u>#id_note, numero_version</u>, contenu_version)  
+-> projet (<u>id_projet</u>, intitule_projet, #id_utilisateur)  
+-> decomposer (<u>#id_sous_projet</u>, #id_projet_parent) (les deux font référence à projet)  
+-> tache (<u>id_tache</u>, intitule_tache, etat_tache, #id_utilisateur, #id_projet)  
+-> autoriser (<u>#id_utilisateur, #id_service, libelle_droit</u>)  
 
-**Règles appliquées et choix faits :**
-- **Associations (0,N)-(1,1) ou (0,N)-(0,1)** (RATTACHER, SOUSCRIRE, RÉGLER, EFFECTUER, ÉCRIRE…) : la clé de l'entité côté N migre comme clé étrangère dans la table côté 1. Elle accepte NULL quand la cardinalité minimale est 0 (par exemple `note.id_dictee` pour une note importée).
-- **Association (0,1)-(0,1) DÉCLENCHER** : la clé étrangère `id_dictee` est placée dans `demande`, avec une contrainte UNIQUE pour garantir qu'une dictée déclenche au plus une demande.
-- **Entité faible VERSION** : sa clé primaire est composée de la clé de NOTE et du numéro de version (`version_note`).
-- **Association ternaire AUTORISER** : elle devient une table dont la clé primaire réunit les trois identifiants. L'entité DROIT n'a pas d'autre attribut que son libellé : elle ne donne pas de table, et les valeurs possibles sont contrôlées par une contrainte CHECK.
-- **Associations récursives PARRAINER et DÉCOMPOSER** : la règle classique placerait une clé étrangère vers sa propre table (`id_parrain` dans utilisateur). Nous les avons traduites par une **table d'association** (`parrainer`, `decomposer`), dont la clé primaire est le filleul ou le sous-projet, ce qui garde la cardinalité 0,1. Raison : MySQL refuse `ON UPDATE CASCADE` sur une clé étrangère qui référence sa propre table, alors que le sujet demande que les modifications se répercutent sans erreur.
-- **« Contenu vocal » de la dictée** : on stocke l'emplacement du fichier audio (`chemin_audio`), pas le fichier lui-même, qui irait dans un stockage de fichiers.
+PARRAINER et DÉCOMPOSER sont devenues des tables : on avait d'abord mis une clé étrangère vers la même table (`id_parrain` dans utilisateur), mais MySQL refusait le ON UPDATE CASCADE dessus.
 
----
+## 6. Insertion des données
 
-## 6. MPD : création des tables et contraintes
+Le prompt est dans `prompts/insertion_v1.txt` (même forme que celui du TP1). Les données ont été générées avec Claude (Anthropic) et sont dans `sql/3_insertion.sql`.
 
-Les scripts sont dans [`sql/`](sql/) et s'exécutent dans cet ordre sous **MySQL 8** :
+## 7. Scénario d'utilisation
 
-| Script | Contenu |
-|---|---|
-| [`1_creation.sql`](sql/1_creation.sql) | Base `journal_vocal`, 14 tables, clés primaires, clés étrangères, `NOT NULL` |
-| [`2_contraintes.sql`](sql/2_contraintes.sql) | Contraintes de validation, ajoutées par `ALTER TABLE` |
-| [`3_insertion.sql`](sql/3_insertion.sql) | Données générées par l'IA (§7) |
-| [`4_interrogation.sql`](sql/4_interrogation.sql) | Requêtes du scénario d'utilisation (§9) |
+Camille travaille au marketing. Elle prépare une campagne pour faire passer des utilisateurs de la formule Gratuite à Plus ou à Pro, puisque ce sont les abonnements qui paient les serveurs.
 
-Chaque script commence par `SET NAMES utf8mb4;` : les accents (« réussi », « à faire »…) sont envoyés en UTF-8, quel que soit l'outil utilisé pour lancer le script.
+Elle a besoin de :  
+-> savoir combien il y a d'utilisateurs par formule, et avoir la liste des e-mails des utilisateurs Gratuit ;  
+-> trouver les utilisateurs Gratuit les plus actifs, qui sont les meilleurs candidats ;  
+-> trouver ceux qui n'ont jamais payé et les anciens abonnés ;  
+-> relancer les paiements échoués ou en attente ;  
+-> récompenser les parrains qui ont le plus de filleuls ;  
+-> voir quels services sont les plus connectés et le chiffre d'affaires par mois.
 
-### 6.1 Modification et suppression d'une ligne référencée
+Les requêtes correspondantes sont dans `sql/4_interrogation.sql`.
 
-Le sujet demande que la modification ou la suppression d'une ligne référencée par une clé étrangère soit gérée **automatiquement, sans erreur**. Toutes les clés étrangères ont donc `ON UPDATE CASCADE` : si un identifiant change, il est mis à jour partout. Pour `ON DELETE`, nous avons choisi selon le sens de chaque lien :
+## 8. Étude des plans d'exécution
 
-| Clé étrangère | `ON DELETE` | Pourquoi |
-|---|---|---|
-| `abonnement`, `dictee`, `demande`, `note`, `projet`, `tache`, `autoriser` → `utilisateur` | `CASCADE` | Ces données n'ont pas de sens sans leur propriétaire. Supprimer un compte supprime aussi toutes ses données, ce qui respecte le droit à l'effacement |
-| `paiement` → `abonnement` | `CASCADE` | Un paiement n'existe que pour un abonnement (cardinalité 1,1) |
-| `version_note` → `note` | `CASCADE` | Entité faible : « on détruit le composant quand on détruit le composé » |
-| `utilisateur` → `formule`, `abonnement` → `formule` | `SET NULL` | Si une formule est retirée de la vente, on garde les comptes et l'historique des abonnements et des paiements |
-| `note` → `dictee`, `demande` → `dictee` | `SET NULL` | Lien facultatif (0,1) : la note ou la demande reste, sans dictée d'origine |
-| `tache` → `projet` | `SET NULL` | Lien facultatif (0,1) : la tâche reste, sans projet |
-| `parrainer` → `utilisateur` (parrain et filleul) | `CASCADE` | Si l'un des deux comptes disparaît, le lien de parrainage disparaît, mais l'autre compte reste |
-| `decomposer` → `projet` (parent et sous-projet) | `CASCADE` | Si le projet parent disparaît, le lien disparaît et le sous-projet devient un projet indépendant |
-| `autoriser` → `service` | `CASCADE` | Si un service n'est plus proposé, les droits accordés sur ce service disparaissent |
+Requête étudiée (la dernière de `4_interrogation.sql`) : les e-mails des utilisateurs Gratuit qui ont dicté en octobre 2026.
 
-**Limite de MySQL rencontrée.** Au départ, le parrainage et les sous-projets étaient traduits par une clé étrangère vers leur propre table (`utilisateur.id_parrain`, `projet.id_projet_parent`), comme le veut la règle de transformation des associations (0,1). En testant, MySQL a refusé de modifier l'identifiant d'un parrain : InnoDB n'accepte pas `ON UPDATE CASCADE` sur une clé étrangère qui référence **sa propre table**. Nous avons donc traduit ces deux associations récursives par des tables (`parrainer`, `decomposer`), ce qui supprime l'erreur sans changer le MCD (§5).
-
-### 6.2 Contraintes de validation
-
-Chaque contrainte de [`2_contraintes.sql`](sql/2_contraintes.sql) traduit une règle de gestion (§2.2). Elles couvrent les différents cas vus en cours :
-
-| Cas du cours | Exemples |
-|---|---|
-| `UNIQUE` | E-mail de l'utilisateur, nom de la formule, nom du service, une seule demande par dictée |
-| `DEFAULT` | Date d'inscription = maintenant, paiement « en attente », tâche « à faire », options désactivées |
-| `CHECK` par énumération (`IN`) | Périodicité (mensuelle, annuelle), état du paiement, état de la tâche, type de droit (lecture, ajout, modification) |
-| `CHECK` par intervalle | Quota entre 1 et 100 000 (`BETWEEN`), prix ≥ 0, montant > 0, numéro de version ≥ 1 |
-| `CHECK` par masque (`LIKE`) | Format de l'e-mail, extension du fichier audio (.m4a, .mp3, .wav) |
-| `CHECK` sur une ligne (deux colonnes) | Date de fin d'abonnement après la date de début, prix annuel ≤ 12 × prix mensuel |
-
----
-
-## 7. Insertion des données
-
-- **Prompt :** [`prompts/insertion_v1.txt`](prompts/insertion_v1.txt). Il reprend la forme du prompt du TP1 : le modèle relationnel avec les clés, le nombre de lignes par table, les valeurs imposées (les 3 formules et les 6 services, comme les maisons du TP1), l'ordre de remplissage des tables, les contraintes SQL recopiées, des règles de cohérence entre les données, et la diversité des noms.
-- **IA utilisée :** Claude (Anthropic), le 18/10/2026.
-- **Résultat :** [`sql/3_insertion.sql`](sql/3_insertion.sql), **467 lignes** réparties dans les 14 tables.
-
-### 7.1 Vérification du résultat
-
-Le script s'exécute **sans aucune erreur** après `1_creation.sql` et `2_contraintes.sql` : aucune contrainte d'intégrité ni de validation n'est violée. Le nombre de lignes de chaque table est celui demandé dans le prompt (30 utilisateurs, 25 abonnements, 60 paiements, 50 dictées, 40 demandes, 40 notes et 80 versions, 20 projets dont 8 sous-projets, 50 tâches, 45 droits).
-
-Nous avons aussi vérifié les règles de cohérence du prompt qui ne sont pas des contraintes SQL :
-
-| Vérification | Résultat |
-|---|---|
-| Paiements en dehors de la période de leur abonnement | 0 |
-| Abonnements ou dictées antérieurs à la création du compte | 0 |
-| Notes ou demandes rattachées à la dictée d'un autre utilisateur | 0 |
-| Abonnements à la formule Gratuite | 0 |
-| Auto-parrainages | 0 |
-| Répartition des formules | Gratuite 12, Plus 11, Pro 7 |
-| États des paiements | réussi 51, échoué 5, remboursé 2, en attente 2 |
-| Notes importées (sans dictée) / demandes écrites (sans dictée) | 10 sur 40 / 12 sur 40 |
-
-### 7.2 Limites relevées
-- Le nombre de dictées par mois reste loin du quota de la formule Gratuite (30) : aucun utilisateur n'est « proche de son quota ». Le scénario cible donc plutôt les utilisateurs Gratuit les plus actifs.
-- Le contenu des versions de notes suit un modèle répétitif : il convient pour les requêtes, moins pour une démonstration du contenu.
-- Les montants payés sont toujours égaux au prix de la formule : il n'y a ni promotion ni paiement au prorata.
-
----
-
-## 8. Scénario d'utilisation
-
-**Qui :** Camille, responsable marketing.
-**Pour quoi faire :** préparer la campagne d'automne **« Passe à Plus »**. L'application est gratuite pour l'essentiel et ce sont les abonnements qui paient les serveurs : Camille veut faire passer des utilisateurs de la formule Gratuite à Plus ou à Pro, sans budget publicitaire.
-
-**Ce qu'elle doit extraire de la base :**
-1. La taille de chaque public (combien d'utilisateurs par formule) et la liste de diffusion des utilisateurs Gratuit.
-2. Les utilisateurs Gratuit **les plus actifs**, et ceux qui dictent plus que certains abonnés payants : ce sont les meilleurs candidats.
-3. Les utilisateurs qui n'ont **jamais** payé, et les **anciens abonnés** à reconquérir.
-4. Les **paiements échoués ou en attente**, avec l'e-mail de l'abonné, pour une relance.
-5. Les **meilleurs parrains**, à récompenser par un mois offert pour en faire des ambassadeurs.
-6. Les services connectés les plus utilisés, et les utilisateurs Gratuit qui ont déjà connecté un agenda, pour adapter le message (avec Plus : 3 services connectés).
-7. Les utilisateurs intéressés par les agents autonomes (offre Pro) et ceux qui structurent déjà leurs idées en projets et sous-projets.
-8. Le chiffre d'affaires encaissé par mois, pour comparer avec les campagnes précédentes.
-
----
-
-## 9. Requêtes d'interrogation
-
-Toutes les requêtes sont dans [`sql/4_interrogation.sql`](sql/4_interrogation.sql), chacune précédée d'un commentaire qui indique les données recherchées.
-
-| Type | Requêtes | Ce qu'elles montrent |
-|---|---|---|
-| **Projections et sélections** (tri, `DISTINCT`, `LIKE`, `IN`, `BETWEEN`) | A1 à A5 | Nouveaux inscrits de 2026, adresses Gmail (pour Google Agenda), paiements à relancer, utilisateurs actifs en septembre-octobre, demandes qui parlent d'agents |
-| **Agrégations** (`GROUP BY`, `HAVING`) | G1 à G5 | Utilisateurs par formule, chiffre d'affaires par mois, utilisateurs avec au moins 3 dictées, parrains avec au moins 2 filleuls, montants par état de paiement |
-| **Jointures** (interne, externe, multiple, table jointe à elle-même) | J1 à J5 | Liste de diffusion Gratuite, dictées de chaque utilisateur Gratuit (même zéro), paiements échoués avec e-mail et formule (4 tables), parrain et filleul côte à côte, utilisation de chaque service (même zéro) |
-| **Requêtes imbriquées** (`IN`, `NOT IN`, `NOT EXISTS`, `EXISTS`, `ANY`, `ALL`) | N1 à N6 | Utilisateurs Gratuit avec un agenda connecté, jamais abonnés, anciens abonnés, utilisateur le plus actif, utilisateurs Gratuit plus actifs qu'au moins un abonné Plus, projets découpés en sous-projets |
-
----
-
-## 10. Organisation du dépôt
-
-```
-ProjetDB_Ragot_Talfer/
-├── README.md            ← ce fichier
-├── prompts/             ← prompts de l'analyse des besoins (v1, v2) et prompt d'insertion
-├── reponses-ia/         ← réponse brute de l'IA pour chaque version du prompt
-├── mcd/                 ← fichier source Mocodo (journal.mcd) et image du MCD
-└── sql/
-    ├── 1_creation.sql       ← tables, clés primaires et étrangères
-    ├── 2_contraintes.sql    ← contraintes de validation
-    ├── 3_insertion.sql      ← données générées par l'IA
-    ├── 4_interrogation.sql  ← requêtes du scénario
-    └── demo_integrite.sql   ← démonstration des contraintes et des cascades (vidéo)
+```sql
+SELECT DISTINCT u.email
+FROM formule f
+INNER JOIN utilisateur u ON u.id_formule = f.id_formule
+INNER JOIN dictee d ON d.id_utilisateur = u.id_utilisateur
+WHERE f.nom_formule = 'Gratuite'
+  AND d.date_heure_dictee BETWEEN '2026-10-01' AND '2026-10-31 23:59:59';
 ```
 
-**Lancer le projet :** dans MySQL Workbench (ou en ligne de commande), exécuter dans l'ordre `1_creation.sql`, `2_contraintes.sql`, `3_insertion.sql`, puis les requêtes de `4_interrogation.sql`. `demo_integrite.sql` se lance sur une base vide, juste après les deux premiers scripts.
+Elle utilise trois opérateurs : sélection (σ), jointure (⋈) et projection (π).
+
+On compte les instructions comme au TD3 (exercice 6) : une jointure entre deux tables de n1 et n2 lignes coûte n1 × n2, une sélection ou une projection coûte le nombre de lignes parcourues. Tailles des tables : formule 3 lignes, utilisateur 30 lignes, dictee 50 lignes. Les nombres de lignes après chaque opérateur ont été mesurés sur nos données.
+
+### Plan 1 : les jointures d'abord
+
+```mermaid
+graph BT
+  F["FORMULE : 3 lignes"] --> J1["⋈ id_formule : 30 lignes"]
+  U["UTILISATEUR : 30 lignes"] --> J1
+  J1 --> J2["⋈ id_utilisateur : 50 lignes"]
+  D["DICTEE : 50 lignes"] --> J2
+  J2 --> S["σ Gratuite et octobre 2026 : 5 lignes"]
+  S --> P["π email : 4 lignes"]
+```
+
+| Étape | Calcul | Instructions | Lignes |
+|---|---|---|---|
+| utilisateur ⋈ formule | 30 × 3 | 90 | 30 |
+| ⋈ dictee | 30 × 50 | 1 500 | 50 |
+| σ Gratuite et octobre | 50 | 50 | 5 |
+| π email | 5 | 5 | 4 |
+| Total | | 1 645 | |
+
+### Plan 2 : les sélections d'abord
+
+```mermaid
+graph BT
+  F["FORMULE : 3 lignes"] --> S1["σ Gratuite : 1 ligne"]
+  S1 --> J1["⋈ id_formule : 12 lignes"]
+  U["UTILISATEUR : 30 lignes"] --> J1
+  D["DICTEE : 50 lignes"] --> S2["σ octobre 2026 : 10 lignes"]
+  J1 --> J2["⋈ id_utilisateur : 5 lignes"]
+  S2 --> J2
+  J2 --> P["π email : 4 lignes"]
+```
+
+| Étape | Calcul | Instructions | Lignes |
+|---|---|---|---|
+| σ Gratuite sur formule | 3 | 3 | 1 |
+| σ octobre sur dictee | 50 | 50 | 10 |
+| σ(formule) ⋈ utilisateur | 1 × 30 | 30 | 12 |
+| ⋈ σ(dictee) | 12 × 10 | 120 | 5 |
+| π email | 5 | 5 | 4 |
+| Total | | 208 | |
+
+### Conclusion
+
+Le plan 2 est le meilleur : 208 instructions au lieu de 1 645, pour le même résultat (4 e-mails). La différence vient surtout de la deuxième jointure, qui croise 12 × 10 lignes au lieu de 30 × 50. Il vaut donc mieux faire les sélections avant les jointures.
